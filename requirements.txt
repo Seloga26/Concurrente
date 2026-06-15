@@ -1,0 +1,16 @@
+# Dependencias del proyecto — instalar con:  pip install -r requirements.txt
+# Entorno objetivo: Python 3.10+ (probado en 3.13). El launcher y las pruebas de
+# configuración NO requieren dependencias externas (solo biblioteca estándar).
+
+# --- Obligatorias (Nivel 1: Python secuencial y multicore) ---
+numpy>=1.24
+
+# --- Pruebas (unittest es estándar; pytest es opcional para una ejecución cómoda) ---
+pytest>=7.0
+
+# --- Análisis y gráficas (benchmark e informe) ---
+pandas>=2.0
+matplotlib>=3.7
+
+# --- Validación opcional del AUC contra una referencia independiente ---
+scikit-learn>=1.3

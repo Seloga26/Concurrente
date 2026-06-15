@@ -1,0 +1,56 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# ---- Datos generados (reproducibles desde data/generate_data.py) ----
+data/*.npy
+data/*.f32
+data/*.i32
+data/*.bin
+data/generation_metadata.json
+data/generation_truth.npz
+
+# ---- Binarios compilados / artefactos de build ----
+*.o
+*.obj
+*.exe
+*.out
+*.so
+*.dll
+C_OpenMP_MPI/scoring_serial
+C_OpenMP_MPI/scoring_openmp
+C_OpenMP_MPI/scoring_mpi
+CUDA/scoring_kernel
+
+# ---- Logs y perfiles (nunca se versionan) ----
+*.log
+*.prof
+*.nvprof
+*.nsys-rep
+*.qdrep
+
+# ---- Resultados experimentales ----
+# Se ignora el contenido temporal, pero se versionan los entregables canónicos
+# (benchmark.csv y las gráficas .png). Las reglas re-incluyen primero la carpeta.
+/results/*
+!/results/.gitkeep
+!/results/benchmark.csv
+!/results/plots/
+/results/plots/*
+!/results/plots/.gitkeep
+!/results/plots/*.png
+
+# ---- Informe: se versiona solo el PDF canónico (y la fuente Markdown) ----
+report/*.pdf
+!report/informe_tecnico.pdf
+
+# ---- SO / editor / harness ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/

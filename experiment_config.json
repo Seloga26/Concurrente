@@ -1,0 +1,47 @@
+{
+  "N": 50,
+  "K": 100000,
+  "algorithm": "literal_fused",
+  "default_mode": "reference",
+  "allowed_modes": ["reference", "benchmark"],
+  "accumulation": {
+    "reference": "float64",
+    "benchmark": "float32"
+  },
+  "tie_tolerance": {
+    "reference": { "atol": 1e-9, "rtol": 1e-9 },
+    "benchmark": { "atol": 1e-6, "rtol": 1e-5 }
+  },
+  "validation_tolerance": {
+    "score_atol_base": 1e-5,
+    "score_atol_per_item": 4.768e-7,
+    "score_rtol": 1e-4,
+    "auc_units_max_step": 1
+  },
+  "theta_policy": "class_mean_midpoint",
+  "consistency_satisfactory": 0.8,
+  "n_healthy": 5,
+  "n_sick": 5,
+  "files": {
+    "matrix_A_npy": "data/matrix_A.npy",
+    "profile_T_npy": "data/profile_T.npy",
+    "profile_S_npy": "data/profile_S.npy",
+    "profile_F_npy": "data/profile_F.npy",
+    "labels_npy": "data/labels.npy",
+    "candidates_npy": "data/candidates_W.npy",
+    "matrix_A_bin": "data/matrix_A.f32",
+    "profile_T_bin": "data/profile_T.f32",
+    "profile_S_bin": "data/profile_S.f32",
+    "profile_F_bin": "data/profile_F.f32",
+    "labels_bin": "data/labels.i32",
+    "candidates_bin": "data/candidates_W.f32",
+    "bin_dtype_float": "float32",
+    "bin_dtype_int": "int32",
+    "bin_order": "row-major",
+    "bin_endianness": "little"
+  },
+  "output": {
+    "benchmark_csv": "results/benchmark.csv",
+    "plots_dir": "results/plots"
+  }
+}

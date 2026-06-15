@@ -1,0 +1,20 @@
+# Normaliza saltos de línea a LF (entorno objetivo: Linux/WSL Ubuntu).
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.c    text eol=lf
+*.h    text eol=lf
+*.cu   text eol=lf
+*.py   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+Makefile text eol=lf
+
+# Archivos binarios: sin normalización de EOL.
+*.npy binary
+*.npz binary
+*.f32 binary
+*.i32 binary
+*.bin binary
+*.pdf binary
+*.png binary

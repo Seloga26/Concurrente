@@ -1,0 +1,15 @@
+{
+  "N": 50,
+  "data_seed": 42,
+  "candidate_seed": 123,
+  "signal_strength": 1.0,
+  "kappa": 50,
+  "p_F": 0.3,
+  "F_binary": true,
+  "eps_noise": 0.0,
+  "n_healthy": 5,
+  "n_sick": 5,
+  "generate_holdout": false,
+  "holdout_seed": 2024,
+  "holdout_n_samples": 10
+}
