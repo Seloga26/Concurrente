@@ -10,6 +10,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define NPY_MAX_DIMS 4
 
 /* Resultado de una carga: datos crudos en el orden original (C-contiguo) y la forma. */
@@ -23,5 +27,9 @@ typedef struct {
 /* Carga 'path' exigiendo el descriptor 'expect_descr' (p.ej. "<f4" o "<i4").
  * Devuelve 1 en exito, 0 en error (mensaje a stderr). 'out' queda con data=NULL en error. */
 int npy_load(const char *path, const char *expect_descr, NpyArray *out);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NPYIO_H */

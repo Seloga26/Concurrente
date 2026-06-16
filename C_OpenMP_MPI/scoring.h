@@ -13,6 +13,10 @@
 #ifndef SCORING_H
 #define SCORING_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Datos de trabajo del scoring. Solo se rellena el juego de punteros del dtype activo;
  * el otro queda en NULL (use_double selecciona cual). */
 typedef struct {
@@ -48,5 +52,9 @@ void sd_search_range(const ScoringData *sd, long k_start, long k_stop,
  * ante empate, minimiza k. */
 long long sd_pack_key(long auc_units, long k, long K);
 void      sd_unpack_key(long long key, long K, long *auc_units, long *k);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SCORING_H */

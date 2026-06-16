@@ -10,6 +10,10 @@
 
 #include "scoring.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Argumentos parseados de la CLI. */
 typedef struct {
     long   N, K;
@@ -31,6 +35,9 @@ typedef struct {
     int    n_threads;          /* 0 => no emitir "n_threads"; >0 => emitirlo (OpenMP) */
     int    n_procs;            /* 0 => no emitir "n_procs";   >0 => emitirlo (MPI)    */
     int    is_root;            /* 1 => este proceso emite el JSON (MPI: solo rank 0)  */
+    int    cuda_block_size;    /* 0 => no emitir; >0 => emitir "cuda_block_size" (CUDA) */
+    long   cuda_grid_size;     /* 0 => no emitir; >0 => emitir "cuda_grid_size"  (CUDA) */
+    const char *device_name;   /* NULL => no emitir; si no => emitir "device" (CUDA)    */
     double t_core_seconds;
     double t_search_seconds;
 } SearchOutcome;
@@ -45,5 +52,9 @@ int runner_main(int argc, char **argv, const char *impl_name, search_fn search);
 
 /* Reloj monotono en segundos (para cronometrar la busqueda). */
 double runner_now_seconds(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RUNNER_H */

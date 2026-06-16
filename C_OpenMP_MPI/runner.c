@@ -244,6 +244,12 @@ static void build_json(FILE *out, const char *impl, const RunnerArgs *a, const S
         fprintf(out, ", \"n_threads\": %d", res->n_threads);
     if (res->n_procs > 0)
         fprintf(out, ", \"n_procs\": %d", res->n_procs);
+    if (res->cuda_block_size > 0)
+        fprintf(out, ", \"cuda_block_size\": %d", res->cuda_block_size);
+    if (res->cuda_grid_size > 0)
+        fprintf(out, ", \"cuda_grid_size\": %ld", res->cuda_grid_size);
+    if (res->device_name)
+        fprintf(out, ", \"device\": \"%s\"", res->device_name);
     fputc('}', out);
     fputc('\n', out);
 }
