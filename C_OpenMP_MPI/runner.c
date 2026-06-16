@@ -242,6 +242,8 @@ static void build_json(FILE *out, const char *impl, const RunnerArgs *a, const S
     fprintf(out, ", \"t_search_seconds\": %.17g", res->t_search_seconds);
     if (res->n_threads > 0)
         fprintf(out, ", \"n_threads\": %d", res->n_threads);
+    if (res->n_procs > 0)
+        fprintf(out, ", \"n_procs\": %d", res->n_procs);
     fputc('}', out);
     fputc('\n', out);
 }
@@ -305,6 +307,7 @@ int runner_main(int argc, char **argv, const char *impl_name, search_fn search) 
     /* Busqueda cronometrada (estrategia inyectada). */
     SearchOutcome res = {0};
     res.best_units = -1; res.best_k = -1;
+    res.is_root = 1;   /* serial/OpenMP siempre emiten; MPI lo baja a rank!=0 */
     if (search(&sd, &a, &res) != 0) { fprintf(stderr, "error: fallo en la busqueda\n"); goto cleanup; }
 
     /* Recompute del ganador fuera del cronometro. */
@@ -351,10 +354,13 @@ int runner_main(int argc, char **argv, const char *impl_name, search_fn search) 
     const float *bw = (const float *)C.data + (size_t)res.best_k * 3;
     best_w[0] = (double)bw[0]; best_w[1] = (double)bw[1]; best_w[2] = (double)bw[2];
 
-    build_json(stdout, impl_name, &a, &sd, &res, best_w, scores, auc_units, denom, auc, theta, cons);
-    if (a.output_json) {
-        FILE *jf = fopen(a.output_json, "w");
-        if (jf) { build_json(jf, impl_name, &a, &sd, &res, best_w, scores, auc_units, denom, auc, theta, cons); fclose(jf); }
+    /* Solo el root emite el JSON (en MPI los demas ranks calculan y descartan). */
+    if (res.is_root) {
+        build_json(stdout, impl_name, &a, &sd, &res, best_w, scores, auc_units, denom, auc, theta, cons);
+        if (a.output_json) {
+            FILE *jf = fopen(a.output_json, "w");
+            if (jf) { build_json(jf, impl_name, &a, &sd, &res, best_w, scores, auc_units, denom, auc, theta, cons); fclose(jf); }
+        }
     }
     rc = 0;
 

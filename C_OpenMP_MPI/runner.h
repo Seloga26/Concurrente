@@ -28,7 +28,9 @@ typedef struct {
 typedef struct {
     long   best_units;
     long   best_k;
-    int    n_threads;          /* 0 => no emitir "n_threads"; >0 => emitirlo */
+    int    n_threads;          /* 0 => no emitir "n_threads"; >0 => emitirlo (OpenMP) */
+    int    n_procs;            /* 0 => no emitir "n_procs";   >0 => emitirlo (MPI)    */
+    int    is_root;            /* 1 => este proceso emite el JSON (MPI: solo rank 0)  */
     double t_core_seconds;
     double t_search_seconds;
 } SearchOutcome;

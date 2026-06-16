@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Valida las variantes nativas (scoring_serial / scoring_openmp) contra el oraculo
-# python.sequential: compara best_k, auc_units, auc, best_w, scores, theta y consistency
-# en ambos modos (reference/benchmark). Construye los binarios si faltan.
+# Valida las variantes nativas (scoring_serial / scoring_openmp / scoring_mpi) contra el
+# oraculo python.sequential: compara best_k, auc_units, auc, best_w, scores, theta y
+# consistency en ambos modos (reference/benchmark). Construye los binarios si faltan.
 #
 # Uso:  bash C_OpenMP_MPI/validate.sh        (desde cualquier directorio)
-# Requiere: gcc/make, python3 + numpy, y el dataset generado en data/.
+# Requiere: gcc/make, mpicc/mpirun, python3 + numpy, y el dataset generado en data/.
 set -e
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,6 +12,7 @@ ROOT="$(cd "$HERE/.." && pwd)"
 D="$ROOT/data"
 cd "$ROOT"
 
+MPI_NP=${MPI_NP:-4}        # nº de ranks para la validacion MPI (override: MPI_NP=8 bash ...)
 make -C "$HERE" >/dev/null
 
 ARGS="--algorithm literal --tie-atol 1e-9 --tie-rtol 1e-9 \
@@ -24,10 +25,12 @@ cmp_mode() {
   python3 -m python.sequential --N 50 --K 100000 --mode "$mode" --accum "$accum" $ARGS > /tmp/py.json
   "$HERE/scoring_serial" --N 50 --K 100000 --mode "$mode" --accum "$accum" $ARGS > /tmp/cs.json
   "$HERE/scoring_openmp" --N 50 --K 100000 --mode "$mode" --accum "$accum" $ARGS > /tmp/co.json
+  mpirun -np "$MPI_NP" "$HERE/scoring_mpi" --N 50 --K 100000 --mode "$mode" --accum "$accum" $ARGS > /tmp/cm.json
   python3 - "$mode" <<'PY'
 import json, sys
 mode = sys.argv[1]
-py = json.load(open("/tmp/py.json")); cs = json.load(open("/tmp/cs.json")); co = json.load(open("/tmp/co.json"))
+py = json.load(open("/tmp/py.json")); cs = json.load(open("/tmp/cs.json"))
+co = json.load(open("/tmp/co.json")); cm = json.load(open("/tmp/cm.json"))
 def close(a, b):
     if isinstance(a, list): return all(close(x, y) for x, y in zip(a, b))
     if isinstance(a, float): return abs(a - b) <= 1e-12 + 1e-9 * max(abs(a), abs(b))
@@ -36,14 +39,15 @@ keys = ["best_k","auc_units","auc_denominator","auc","best_w","scores","theta",
         "consistency","consistency_pass"]
 print(f"== mode={mode} ==")
 ok = True
-for impl, d in (("c_serial", cs), ("c_openmp", co)):
+for impl, d in (("c_serial", cs), ("c_openmp", co), ("c_mpi", cm)):
     bad = [k for k in keys if not close(py[k], d[k])]
     status = "OK  (exacto vs python)" if not bad else f"DIFIERE en {bad}"
     print(f"  {impl:9s}: best_k={d['best_k']} auc_units={d['auc_units']} "
           f"theta={d['theta']:.12g}  -> {status}")
     ok = ok and not bad
 print(f"  t_search: python={py['t_search_seconds']:.4f}s  c_serial={cs['t_search_seconds']:.4f}s  "
-      f"c_openmp={co['t_search_seconds']:.4f}s (x{co.get('n_threads','?')} hilos)")
+      f"c_openmp={co['t_search_seconds']:.4f}s (x{co.get('n_threads','?')} hilos)  "
+      f"c_mpi={cm['t_search_seconds']:.4f}s (x{cm.get('n_procs','?')} ranks)")
 sys.exit(0 if ok else 1)
 PY
 }
