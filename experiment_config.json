@@ -1,7 +1,7 @@
 {
   "N": 50,
   "K": 100000,
-  "algorithm": "literal_fused",
+  "algorithm": "literal",
   "default_mode": "reference",
   "allowed_modes": ["reference", "benchmark"],
   "accumulation": {

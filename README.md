@@ -11,8 +11,8 @@ C + OpenMP, C + MPI y CUDA.
 
 ## Modelo (resumen)
 
-- `P_i = W1*T_i + W2*S_i + W3*F_i` (núcleo **fusionado**: no se materializa P en el benchmark).
-- `Score_j = sum_i A[j,i] * (W1*T_i + W2*S_i + W3*F_i)` → 10 acumuladores por candidato.
+- `P_i = W1*T_i + W2*S_i + W3*F_i`; `Score = A · P` (forma **literal** del PDF, O(NK), sin precomputar G).
+- `algorithm = "literal"` identifica la misma ecuación en todas las implementaciones; el `kernel_variant` indica cómo la realiza cada una: Python = `materialized_numpy` (materializa P y usa `A @ P`); el código nativo (C/OpenMP/MPI/CUDA) usará `fused` (`Score_j += A[j,i]*(W1*T_i+W2*S_i+W3*F_i)`, sin materializar P).
 - AUC por comparaciones de pares, representado como entero `auc_units = 2*wins + ties ∈ [0,50]`.
 - Argmax con clave int64 `key = auc_units*K + (K-1-k)` (desempate por **menor índice global**).
 

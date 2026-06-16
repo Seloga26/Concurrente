@@ -13,13 +13,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-# Límite de overflow de la clave del argmax: key = auc_units*K + (K-1-k);
-# key_max = 51*K - 1 debe caber en int64 con signo.
-INT64_MAX = 9223372036854775807
-KEY_FACTOR = 51
-VALID_ALGORITHM = "literal_fused"
+# Permite ejecutar `python config/launcher.py` directamente (sys.path[0] = config/).
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+# Las constantes de la clave del argmax viven en la capa común (common.keys), no aquí:
+# la capa CLI importa de la capa matemática, nunca al revés. Se re-exportan para los
+# importadores existentes (data.generate_data, tests.test_config).
+from common.keys import INT64_MAX, KEY_FACTOR  # noqa: E402,F401
+
+VALID_ALGORITHM = "literal"
 DEFAULT_CONFIG = "experiment_config.json"
 DEFAULT_GENERATION_CONFIG = "generation_config.json"
 
@@ -154,9 +161,12 @@ def build_command(cfg, impl, mode=None, processes=1):
         labels = files["labels_bin"]
         cand = files["candidates_bin"]
 
+    # Invocación canónica de las impls Python: `python -m python.<modulo>` (no por ruta),
+    # para que sys.path[0] no quede en python/ y los imports de common/config no dependan
+    # de PYTHONPATH.
     prefix = {
-        "python_sequential": ["python", "python/sequential.py"],
-        "python_multicore": ["python", "python/multicore.py"],
+        "python_sequential": [sys.executable, "-m", "python.sequential"],
+        "python_multicore": [sys.executable, "-m", "python.multicore"],
         "c_serial": ["./C_OpenMP_MPI/scoring_serial"],
         "openmp": ["./C_OpenMP_MPI/scoring_openmp"],
         "mpi": ["mpirun", "-np", str(processes), "./C_OpenMP_MPI/scoring_mpi"],
@@ -166,6 +176,8 @@ def build_command(cfg, impl, mode=None, processes=1):
     tie = cfg["tie_tolerance"][resolved]
     accum = cfg["accumulation"][resolved]
 
+    # Nota: NO se pasa --output (CSV). Cada impl emite JSON a stdout; el agregador
+    # (run_all.sh / launcher) construirá results/benchmark.csv más adelante.
     return prefix + [
         "--N", str(cfg["N"]),
         "--K", str(cfg["K"]),
@@ -182,7 +194,6 @@ def build_command(cfg, impl, mode=None, processes=1):
         "--candidates", cand,
         "--theta-policy", str(cfg["theta_policy"]),
         "--consistency-threshold", _fmt(cfg["consistency_satisfactory"]),
-        "--output", cfg["output"]["benchmark_csv"],
     ]
 
 

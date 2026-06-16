@@ -10,6 +10,8 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
+
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -85,3 +87,39 @@ def expected_dtypes():
         "candidates_W": "float32",
         "W_true": "float64",
     }
+
+
+# --------------------------------------------------------------------------- #
+# Fixtures de scoring deterministas (N=2, 10 muestras) — calculables a mano
+# --------------------------------------------------------------------------- #
+# T=[1,0], S=[0,1], F=[0,0]; sanos A=[0.1,0.9], enfermos A=[0.9,0.1].
+#   cand (1,0,0) -> P=[1,0] -> Score=col0 -> sanos 0.1 < enfermos 0.9 -> auc_units=50
+#   cand (0,1,0) -> P=[0,1] -> Score=col1 -> enfermos<sanos          -> auc_units=0
+#   cand (0,0,1) -> P=[0,0] -> Score=0    -> 25 empates              -> auc_units=25
+def manual_scoring_fixture():
+    A = np.array([[0.1, 0.9]] * 5 + [[0.9, 0.1]] * 5, dtype=np.float32)
+    T = np.array([1.0, 0.0], dtype=np.float32)
+    S = np.array([0.0, 1.0], dtype=np.float32)
+    F = np.array([0.0, 0.0], dtype=np.float32)
+    y = np.array([0] * 5 + [1] * 5, dtype=np.int32)
+    candidates_W = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
+    return {
+        "A": A, "T": T, "S": S, "F": F, "y": y, "candidates_W": candidates_W,
+        "pos_idx": [5, 6, 7, 8, 9], "neg_idx": [0, 1, 2, 3, 4],
+        "expected_auc_units": [50, 0, 25],
+        "expected_best_k": 0,
+        "expected_best_auc_units": 50,
+    }
+
+
+# Varios óptimos (auc_units=50) en k=2 y k=5 -> debe ganar el menor índice (k=2).
+def tie_fixture():
+    fx = manual_scoring_fixture()
+    fx["candidates_W"] = np.array(
+        [[0, 1, 0], [0, 0, 1], [1, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]],
+        dtype=np.float32,
+    )
+    fx["expected_auc_units"] = [0, 25, 50, 25, 0, 50]
+    fx["expected_best_k"] = 2
+    fx["expected_best_auc_units"] = 50
+    return fx

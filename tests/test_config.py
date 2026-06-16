@@ -35,7 +35,7 @@ class ConfigTests(unittest.TestCase):
     def test_load_base(self):
         self.assertEqual(self.cfg["N"], 50)
         self.assertEqual(self.cfg["K"], 100000)
-        self.assertEqual(self.cfg["algorithm"], "literal_fused")
+        self.assertEqual(self.cfg["algorithm"], "literal")
         self.assertEqual(self.cfg["default_mode"], "reference")
         self.assertEqual(self.cfg["allowed_modes"], ["reference", "benchmark"])
         self.assertEqual(validate_config(self.cfg), "reference")
@@ -94,13 +94,14 @@ class ConfigTests(unittest.TestCase):
         c1 = build_command(self.cfg, "python_sequential", "reference")
         c2 = build_command(self.cfg, "python_sequential", "reference")
         self.assertEqual(c1, c2)
-        self.assertEqual(c1[:2], ["python", "python/sequential.py"])
+        self.assertEqual(c1[:3], [sys.executable, "-m", "python.sequential"])
         self.assertEqual(c1[c1.index("--N") + 1], "50")
         self.assertEqual(c1[c1.index("--K") + 1], "100000")
         self.assertEqual(c1[c1.index("--mode") + 1], "reference")
         self.assertEqual(c1[c1.index("--accum") + 1], "float64")
-        self.assertEqual(c1[c1.index("--algorithm") + 1], "literal_fused")
+        self.assertEqual(c1[c1.index("--algorithm") + 1], "literal")
         self.assertEqual(c1[c1.index("--candidates") + 1], "data/candidates_W.npy")
+        self.assertNotIn("--output", c1)
 
     def test_build_command_returns_list_of_str(self):
         cmd = build_command(self.cfg, "python_sequential", "reference")
