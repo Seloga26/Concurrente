@@ -31,13 +31,20 @@ def score_candidate(w0, w1, w2, A, T, S, F):
     return A @ materialize_p(w0, w1, w2, T, S, F)
 
 
-def search_best(A_w, T_w, S_w, F_w, candidates, pos_idx, neg_idx, atol, rtol, work_dtype):
-    """NÚCLEO CRONOMETRADO. Devuelve (best_auc_units, best_k); solo enteros, sin guardar scores."""
+def search_best(A_w, T_w, S_w, F_w, candidates, pos_idx, neg_idx, atol, rtol, work_dtype,
+                k_start=0, k_stop=None):
+    """NÚCLEO CRONOMETRADO. Devuelve (best_auc_units, best_k); solo enteros, sin guardar scores.
+
+    `k_start`/`k_stop` acotan el rango de candidatos [k_start, k_stop) a explorar (default:
+    todo). `k` es el índice GLOBAL, por lo que el desempate por menor índice se mantiene tanto
+    dentro del rango como al reducir varios rangos disjuntos (multicore/OpenMP/MPI/CUDA).
+    """
     st = np.dtype(work_dtype).type
-    K = candidates.shape[0]
+    if k_stop is None:
+        k_stop = candidates.shape[0]
     best_units = -1
     best_k = -1
-    for k in range(K):
+    for k in range(k_start, k_stop):
         w0 = st(candidates[k, 0])
         w1 = st(candidates[k, 1])
         w2 = st(candidates[k, 2])

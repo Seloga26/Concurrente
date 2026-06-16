@@ -65,6 +65,26 @@ class ScoringTests(unittest.TestCase):
         fx = manual_scoring_fixture()
         self.assertEqual(self._search(fx, "float64"), self._search(fx, "float32"))
 
+    def test_range_returns_global_index(self):
+        # k=0->50, k=1->0, k=2->25; rango [1,3) debe ganar k=2 (índice GLOBAL), no k=1 local.
+        fx = manual_scoring_fixture()
+        a, t, s, f = prepare_work_arrays(fx["A"], fx["T"], fx["S"], fx["F"], "float64")
+        out = search_best(a, t, s, f, fx["candidates_W"], fx["pos_idx"], fx["neg_idx"],
+                          ATOL, RTOL, np.dtype("float64"), k_start=1, k_stop=3)
+        self.assertEqual(out, (25, 2))
+
+    def test_range_partition_matches_full(self):
+        # Particionar [0,K) en rangos disjuntos y reducir debe igualar la búsqueda completa.
+        fx = tie_fixture()
+        a, t, s, f = prepare_work_arrays(fx["A"], fx["T"], fx["S"], fx["F"], "float64")
+        common = (a, t, s, f, fx["candidates_W"], fx["pos_idx"], fx["neg_idx"], ATOL, RTOL,
+                  np.dtype("float64"))
+        full = search_best(*common)
+        parts = [search_best(*common, k_start=ks, k_stop=ke) for ks, ke in ((0, 3), (3, 6))]
+        best = min(parts, key=lambda r: (-r[0], r[1]))  # mayor units, empate -> menor k
+        self.assertEqual(best, full)
+        self.assertEqual(best, (50, 2))
+
 
 if __name__ == "__main__":
     unittest.main()
