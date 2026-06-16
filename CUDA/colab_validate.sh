@@ -35,16 +35,20 @@ cmp_mode() {
 import json, sys
 mode = sys.argv[1]
 py = json.load(open("/tmp/py.json")); cu = json.load(open("/tmp/cu.json")); cp = json.load(open("/tmp/cp.json"))
-def close(a, b):
-    if isinstance(a, list): return all(close(x, y) for x, y in zip(a, b))
-    if isinstance(a, float): return abs(a - b) <= 1e-12 + 1e-9 * max(abs(a), abs(b))
+def close(a, b, tol):
+    if isinstance(a, list): return all(close(x, y, tol) for x, y in zip(a, b))
+    if isinstance(a, float): return abs(a - b) <= 1e-12 + tol * max(abs(a), abs(b))
     return a == b
-keys = ["best_k","auc_units","auc_denominator","auc","best_w","scores","theta",
-        "consistency","consistency_pass"]
+# Campos de DECISION: siempre estrictos. scores/theta: tolerancia f32 en benchmark (el redondeo
+# f32 difiere entre implementaciones; reference=f64 es el oraculo exacto).
+STRICT = ["best_k","auc_units","auc_denominator","auc","best_w","consistency","consistency_pass"]
+SOFT = ["scores","theta"]
+ftol = 1e-9 if mode == "reference" else 1e-5
 print(f"== mode={mode} ==")
 ok = True
 for impl, d in (("cuda", cu), ("cuda_pycuda", cp)):
-    bad = [k for k in keys if not close(py[k], d[k])]
+    bad = [k for k in STRICT if not close(py[k], d[k], 1e-9)]
+    bad += [k for k in SOFT if not close(py[k], d[k], ftol)]
     status = "OK  (exacto vs python)" if not bad else f"DIFIERE en {bad}"
     print(f"  {impl:11s}: best_k={d['best_k']} auc_units={d['auc_units']} "
           f"theta={d['theta']:.12g}  dev={d.get('device','?')}  -> {status}")
