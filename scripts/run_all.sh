@@ -5,8 +5,9 @@
 #
 # Parametros (override por entorno):
 #   K_GRID="100000 1000000 10000000"   P_GRID="1 2 4 6 8 10 12"   REPS=3
-#   MODES="reference benchmark"        LABEL=wsl
+#   MODES="reference benchmark"        LABEL=wsl   ONLY_IMPLS="..." (restringe impls)
 # Ejemplo grid reducido:  K_GRID="100000" P_GRID="1 2 12" REPS=1 bash scripts/run_all.sh
+# En Colab (solo GPU + baseline):  ONLY_IMPLS="c_serial cuda cuda_pycuda" P_GRID="1" LABEL=colab bash scripts/run_all.sh
 set -eo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +31,13 @@ mkdir -p results
 : > "$RAW"
 
 IMPLS="$(available_impls)"
+# Restringir impls via env ONLY_IMPLS (interseccion con las disponibles). Util en Colab para
+# correr solo CUDA + un baseline c_serial:  ONLY_IMPLS="c_serial cuda cuda_pycuda" ...
+if [ -n "${ONLY_IMPLS:-}" ]; then
+  filtered=""
+  for i in $IMPLS; do for w in $ONLY_IMPLS; do [ "$i" = "$w" ] && filtered="$filtered $i"; done; done
+  IMPLS="$filtered"
+fi
 # Recortar P_GRID a nproc.
 PGRID=""
 for p in $P_GRID; do [ "$p" -le "$NPROC" ] && PGRID="$PGRID $p"; done
